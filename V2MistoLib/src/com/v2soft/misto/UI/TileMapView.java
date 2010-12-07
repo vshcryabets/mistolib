@@ -253,4 +253,9 @@ public class TileMapView extends View
 //		int y = tile.getExternalId() / 0x10000;
 		this.postInvalidate();
 	}
+	
+	public void setZoom(int level)
+	{
+		
+	}
 }
