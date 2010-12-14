@@ -23,20 +23,25 @@ package com.v2soft.misto.UI;
 import com.v2soft.misto.Providers.TileInfo;
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
 
 public class TileMapView extends View 
 {
+	private static final int CONST_TILECHANGEBOUND = 32;
 	private TileMapAdapter mAdapter;
 	private TileInfo [][] mDataArray;
 	private int mTileHorizCount, mTileVertCount;
 	private int mTileWidth, mTileHeight;
+	private int mTileDrawWidth, mTileDrawHeight;
 	private int mTopLeftX = 0, mTopLeftY = 0;
 	private Paint mPaint;
 	private int mTopOffset, mLeftOffset;
+	private float mZoomLevel;
+	private Matrix mTileMatrix;
+	private int mTileChangeBound;
 
 	public TileMapView(Context context) 
 	{
@@ -46,10 +51,14 @@ public class TileMapView extends View
 
 	private void init() 
 	{
+		mTileChangeBound = CONST_TILECHANGEBOUND;
 		mPaint = new Paint();
+		mPaint.setFilterBitmap(true);
 		mPaint.setColor(0xFF909000);
 		mTopOffset = 0;
 		mLeftOffset = 0;
+		mZoomLevel = 1;
+		mTileMatrix = new Matrix();
 	}
 
 	public TileMapView(Context context, AttributeSet attrs) 
@@ -84,12 +93,12 @@ public class TileMapView extends View
 		mTopOffset -= dy;
 		mLeftOffset -= dx;
 		boolean changed = false;
-		if ( mLeftOffset > -32 )
+		if ( mLeftOffset > -mTileChangeBound )
 		{
 			moveTilesToRight();
 			changed = true;
 		}
-		if ( mLeftOffset < -mTileWidth-32 )
+		if ( mLeftOffset < -mTileWidth-mTileChangeBound )
 		{
 			moveTilesToLeft();
 			changed = true;
@@ -99,7 +108,7 @@ public class TileMapView extends View
 			moveTilesToBottom();
 			changed = true;
 		}
-		if ( mTopOffset < -mTileHeight-32 )
+		if ( mTopOffset < -mTileHeight-mTileChangeBound )
 		{
 			moveTilesToTop();
 			changed = true;
@@ -111,7 +120,7 @@ public class TileMapView extends View
 	
 	private void moveTilesToBottom() 
 	{
-		while ( mTopOffset > -32 )
+		while ( mTopOffset > -mTileChangeBound )
 		{
 			mTopLeftY--;
 			mTopOffset -= mTileHeight;
@@ -129,7 +138,7 @@ public class TileMapView extends View
 
 	private void moveTilesToTop() 
 	{
-		int top_bound = -mTileHeight-32;
+		int top_bound = -mTileHeight-mTileChangeBound;
 		while ( mTopOffset < top_bound )
 		{
 			mTopLeftY++;
@@ -148,7 +157,7 @@ public class TileMapView extends View
 
 	private void moveTilesToRight() 	
 	{		
-		while ( mLeftOffset > -32 )
+		while ( mLeftOffset > -mTileChangeBound )
 		{
 			mTopLeftX--;
 			mLeftOffset -= mTileWidth;
@@ -166,7 +175,7 @@ public class TileMapView extends View
 
 	private void moveTilesToLeft() 	
 	{
-		int left_bound = -mTileWidth-32;
+		int left_bound = -mTileWidth-mTileChangeBound;
 		while ( mLeftOffset < left_bound )
 		{
 			mTopLeftX++;
@@ -191,15 +200,15 @@ public class TileMapView extends View
 			for ( int x = 0; x < mTileHorizCount; x++)
 			{
 				TileInfo tile = mDataArray[y][x];
-				int left = x*tile.getWidth()+mLeftOffset;
-				int top = y*tile.getHeight()+mTopOffset;
+				int left = x*mTileWidth+mLeftOffset;
+				int top = y*mTileWidth+mTopOffset;
+				mTileMatrix.setTranslate(left, top);
+				mTileMatrix.postScale(mZoomLevel, mZoomLevel);
 				if ( tile.getBitmap() != null )
-					canvas.drawBitmap(tile.getBitmap(), 
-							left, 
-							top, mPaint);
+					canvas.drawBitmap(tile.getBitmap(), mTileMatrix, mPaint);
 				else
-					canvas.drawRect(left, top, left+mTileWidth-2, 
-							top+mTileHeight-2, mPaint);
+					canvas.drawRect(left, top, left+mTileDrawWidth-2, 
+							top+mTileDrawHeight-2, mPaint);
 			}
 		}
 		super.onDraw(canvas);
@@ -220,6 +229,8 @@ public class TileMapView extends View
 		mTileHeight = mAdapter.getTileHeight();
 		mTileWidth = mAdapter.getTileWidth();
 		mTopOffset = -mAdapter.getTileHeight();
+		mTileDrawWidth = (int) (mTileWidth*mZoomLevel);
+		mTileDrawHeight = (int)(mTileHeight*mZoomLevel);
 		mLeftOffset = -mAdapter.getTileWidth();
 		mTileHorizCount = this.getWidth() / mTileWidth + 2;
 		mTileVertCount = this.getHeight() / mTileHeight + 2;		
@@ -244,7 +255,7 @@ public class TileMapView extends View
 			}
 		}
 		long t2 = System.currentTimeMillis()-t1;
-		Log.d("fillDataArray", "Time="+t2);
+//		Log.d("fillDataArray", "Time="+t2);
 	}
 
 	public void updateTile(TileInfo tile) 
@@ -254,8 +265,10 @@ public class TileMapView extends View
 		this.postInvalidate();
 	}
 	
-	public void setZoom(int level)
+	public void addZoom(float level)
 	{
-		
+		mZoomLevel += level;
+		this.postInvalidate();
 	}
+	
 }

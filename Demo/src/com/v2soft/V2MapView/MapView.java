@@ -30,6 +30,7 @@ public class MapView extends Activity implements OnClickListener
         setContentView(R.layout.main);
         
         tileMapUI = (TileMapView)findViewById(R.id.tileMapUI);
+        tileMapUI.addZoom((float) -0.1);
         provider = new MapnikProvider(this);
                
         MyAdapter adapter = new MyAdapter();
