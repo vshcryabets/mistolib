@@ -18,14 +18,32 @@
 // 
 // 
 // ***** END LICENSE BLOCK *****
-package com.v2soft.misto.UI;
+package com.v2soft.misto.UI.adapter;
+
+import android.database.DataSetObservable;
+import android.database.DataSetObserver;
 
 import com.v2soft.misto.Providers.TileInfo;
 
-public interface TileMapAdapter 
+public abstract class TileMapAdapter 
 {
-	TileInfo getTileInfo(int x, int y, TileInfo tile);
-	TileInfo getTileInfoAsync(int x, int y, TileInfo tile);
-	int getTileWidth();
-	int getTileHeight();
+    private final DataSetObservable mDataSetObservable = new DataSetObservable();
+
+    public void registerDataSetObserver(DataSetObserver observer) {
+        mDataSetObservable.registerObserver(observer);
+    }
+
+    public void unregisterDataSetObserver(DataSetObserver observer) {
+        mDataSetObservable.unregisterObserver(observer);
+    }
+    
+    public void notifyDataSetChanged() {
+        mDataSetObservable.notifyChanged();
+    }
+	
+	
+	public abstract TileInfo getTileInfo(int x, int y, TileInfo tile);
+	public abstract TileInfo getTileInfoAsync(int x, int y, TileInfo tile);
+	public abstract int getTileWidth();
+	public abstract int getTileHeight();
 }

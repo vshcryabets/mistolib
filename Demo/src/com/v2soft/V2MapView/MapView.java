@@ -2,12 +2,8 @@ package com.v2soft.V2MapView;
 
 import java.util.List;
 
-import com.v2soft.misto.Providers.BitmapProvider;
-import com.v2soft.misto.Providers.BitmapProviderListener;
-import com.v2soft.misto.Providers.MapnikProvider;
-import com.v2soft.misto.Providers.TileInfo;
-import com.v2soft.misto.UI.TileMapAdapter;
 import com.v2soft.misto.UI.TileMapView;
+import com.v2soft.misto.UI.adapter.MapnikAdapter;
 
 import android.app.Activity;
 import android.content.Context;
@@ -22,8 +18,7 @@ import android.view.View.OnClickListener;
 public class MapView extends Activity implements OnClickListener 
 {
 	private TileMapView tileMapUI;
-	private BitmapProvider provider;
-    /** Called when the activity is first created. */
+	/** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -31,11 +26,9 @@ public class MapView extends Activity implements OnClickListener
         
         tileMapUI = (TileMapView)findViewById(R.id.tileMapUI);
         tileMapUI.addZoom((float) -0.1);
-        provider = new MapnikProvider(this);
                
-        MyAdapter adapter = new MyAdapter();
+        MapnikAdapter adapter = new MapnikAdapter(this, getCurrentLocation(this),12);
         tileMapUI.setDataAdapter(adapter);
-        provider.addListener(adapter);
     }
     
 	/**
@@ -61,52 +54,6 @@ public class MapView extends Activity implements OnClickListener
 		}
 		return location;
 	}    
-    class MyAdapter implements TileMapAdapter, BitmapProviderListener
-    {
-    	TileInfo mBaseTile;
-    	
-    	public MyAdapter() 
-    	{
-    		Location location = getCurrentLocation(MapView.this);
-    		mBaseTile = provider.getTileInfoByLocation(location, 12);
-		}
-
-		@Override
-		public TileInfo getTileInfo(int x, int y, TileInfo tile) 
-		{
-			if ( tile == null )
-				tile = new TileInfo();
-			provider.getTileByOffset(mBaseTile,x,y).copyTo(tile);
-			provider.prepareTileImage(tile);
-			return tile;
-		}
-
-		@Override
-		public int getTileWidth() {
-			return mBaseTile.getWidth();
-		}
-
-		@Override
-		public int getTileHeight() {
-			return mBaseTile.getHeight();
-		}
-
-		@Override
-		public TileInfo getTileInfoAsync(int x, int y, TileInfo tile) 
-		{
-			if ( tile == null )
-				tile = new TileInfo();
-			provider.getTileByOffset(mBaseTile,x,y).copyTo(tile);
-			provider.prepareTileImageAsync(tile);
-			return tile;
-		}
-
-		@Override
-		public void onTileReady(TileInfo tile) 
-		{
-			tileMapUI.updateTile(tile);
-		}
-    }
     
     int sx,sy;
     

@@ -25,22 +25,28 @@ import android.util.AttributeSet;
 import android.widget.FrameLayout;
 
 public class MapView extends FrameLayout {
+	private FrameLayout mControlsLayer;
 
 	public MapView(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
-		// TODO Auto-generated constructor stub
+		init();
 	}
 
 	public MapView(Context context, AttributeSet attrs) {
 		super(context, attrs);
-		// TODO Auto-generated constructor stub
+		init();
 	}
 
 	public MapView(Context context) {
 		super(context);
-		// TODO Auto-generated constructor stub
+		init();
+	}	
+
+	private void init() 
+	{
+		mControlsLayer = new FrameLayout(getContext());
 	}
-	
+
 	public void setBuiltInZoomControls(boolean value)
 	{
 		// TODO Auto-generated constructor stub

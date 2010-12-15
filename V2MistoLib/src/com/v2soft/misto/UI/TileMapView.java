@@ -21,14 +21,17 @@
 package com.v2soft.misto.UI;
 
 import com.v2soft.misto.Providers.TileInfo;
+import com.v2soft.misto.UI.adapter.TileMapAdapter;
+
 import android.content.Context;
+import android.database.DataSetObserver;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.view.View;
 
-public class TileMapView extends View 
+public class TileMapView extends View
 {
 	private static final int CONST_TILECHANGEBOUND = 32;
 	private TileMapAdapter mAdapter;
@@ -42,6 +45,7 @@ public class TileMapView extends View
 	private float mZoomLevel;
 	private Matrix mTileMatrix;
 	private int mTileChangeBound;
+	private TileMapViewObserver mObserver;
 
 	public TileMapView(Context context) 
 	{
@@ -59,6 +63,7 @@ public class TileMapView extends View
 		mLeftOffset = 0;
 		mZoomLevel = 1;
 		mTileMatrix = new Matrix();
+		mObserver = new TileMapViewObserver();
 	}
 
 	public TileMapView(Context context, AttributeSet attrs) 
@@ -76,6 +81,7 @@ public class TileMapView extends View
 	public void setDataAdapter(TileMapAdapter adapter)
 	{
 		mAdapter = adapter;
+		mAdapter.registerDataSetObserver(mObserver);
 		buildDataArray();
 	}
 	
@@ -240,7 +246,6 @@ public class TileMapView extends View
 
 	private void fillDataArray() 
 	{
-		long t1 = System.currentTimeMillis();
 		if ( mAdapter == null ) return;
 		for ( int y = 0; y < mTileVertCount; y++ )
 		{
@@ -254,8 +259,6 @@ public class TileMapView extends View
 				}
 			}
 		}
-		long t2 = System.currentTimeMillis()-t1;
-//		Log.d("fillDataArray", "Time="+t2);
 	}
 
 	public void updateTile(TileInfo tile) 
@@ -271,4 +274,18 @@ public class TileMapView extends View
 		this.postInvalidate();
 	}
 	
+	private class TileMapViewObserver extends DataSetObserver
+	{
+		@Override
+		public void onChanged() 
+		{
+			TileMapView.this.postInvalidate();
+		}
+		
+		@Override
+		public void onInvalidated() 
+		{
+			TileMapView.this.postInvalidate();		
+		}
+	}
 }
