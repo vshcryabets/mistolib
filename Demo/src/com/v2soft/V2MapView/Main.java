@@ -2,8 +2,7 @@ package com.v2soft.V2MapView;
 
 import java.util.List;
 
-import com.v2soft.misto.UI.TileMapView;
-import com.v2soft.misto.UI.adapter.MapnikAdapter;
+import com.v2soft.misto.UI.MapView;
 
 import android.app.Activity;
 import android.content.Context;
@@ -15,45 +14,18 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 
-public class MapView extends Activity implements OnClickListener 
+public class Main extends Activity implements OnClickListener 
 {
-	private TileMapView tileMapUI;
+	private MapView tileMapUI;
 	/** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
         
-        tileMapUI = (TileMapView)findViewById(R.id.tileMapUI);
-        tileMapUI.addZoom((float) -0.1);
-               
-        MapnikAdapter adapter = new MapnikAdapter(this, getCurrentLocation(this),12);
-        tileMapUI.setDataAdapter(adapter);
+        tileMapUI = (MapView)findViewById(R.id.tileMapUI);
     }
     
-	/**
-	 * Get current location
-	 * @param context context
-	 * @return null if can't find location
-	 */	
-	public static Location getCurrentLocation(Context context)
-	{
-		Location location = null;
-		LocationManager lm = (LocationManager) context.getSystemService( 
-				Context.LOCATION_SERVICE);
-		location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-		if ( location == null )
-		{
-			// try to get location from other providers
-		    List<String> providers = lm.getProviders(true);  
-		    for (int i=providers.size()-1; i>=0; i--) 
-		    {  
-		    	location = lm.getLastKnownLocation(providers.get(i));  
-		        if ( location != null) break;  
-		    }
-		}
-		return location;
-	}    
     
     int sx,sy;
     
@@ -71,7 +43,7 @@ public class MapView extends Activity implements OnClickListener
 			{
 				int dx = (int) (event.getX()-sx);
 				int dy = (int) (event.getY()-sy);
-				tileMapUI.scrollBy(-dx, -dy);
+//				tileMapUI.scrollBy(-dx, -dy);
 			}
 			if ( event.getAction() == MotionEvent.ACTION_MOVE)
 			{
@@ -79,7 +51,7 @@ public class MapView extends Activity implements OnClickListener
 				int dy = (int) (event.getY()-sy);
 				if ( Math.abs(dx*dy) > 100 )
 				{
-					tileMapUI.scrollBy(-dx, -dy);
+//					tileMapUI.scrollBy(-dx, -dy);
 					sx = (int) event.getX();
 					sy = (int) event.getY();
 				}
