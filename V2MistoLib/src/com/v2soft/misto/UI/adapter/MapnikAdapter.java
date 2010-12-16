@@ -23,6 +23,7 @@ package com.v2soft.misto.UI.adapter;
 import android.content.Context;
 import android.location.Location;
 
+import com.v2soft.misto.Providers.BitmapProvider;
 import com.v2soft.misto.Providers.BitmapProviderListener;
 import com.v2soft.misto.Providers.MapnikProvider;
 import com.v2soft.misto.Providers.TileInfo;
@@ -71,5 +72,10 @@ public class MapnikAdapter extends TileMapAdapter implements BitmapProviderListe
 	public void onTileReady(TileInfo tile) 
 	{
 		notifyDataSetChanged();
+	}
+
+	public BitmapProvider getProvider() 
+	{
+		return mProvider;
 	}
 }

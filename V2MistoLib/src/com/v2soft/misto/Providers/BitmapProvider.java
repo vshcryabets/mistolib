@@ -30,6 +30,8 @@ import android.location.Location;
  */
 public abstract class BitmapProvider 
 {
+	protected static final int TILE_SIZE = 256;
+
 	public abstract boolean prepareTileImage(TileInfo info);	
 	public abstract void prepareTileImageAsync(TileInfo info);
 	public abstract TileInfo getTileInfoByLocation(Location location, int zoom);
@@ -54,6 +56,17 @@ public abstract class BitmapProvider
 	{
 		return getTileByOffset(tile, -1, 0);
 	}
+	
+	public long worldTilesCount(int zoom)
+	{
+		return (1 << zoom);
+	}
+
+	public long worldWidthPx(int zoom)
+	{
+		return TILE_SIZE*worldTilesCount(zoom);
+	}
+	
 	//-----------------------------------------------------------------------------------------------
     // Events
     //-----------------------------------------------------------------------------------------------

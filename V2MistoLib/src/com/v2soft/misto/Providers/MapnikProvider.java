@@ -63,16 +63,17 @@ public class MapnikProvider extends BitmapProvider
 	//-----------------------------------------------------------------------------------------------
     // Provider functions
     //-----------------------------------------------------------------------------------------------		
+	
 	@Override
 	public TileInfo getTileInfoByLocation(Location location, int zoom) 
 	{
 		TileInfo res = new TileInfo();
-		res.setHeight(256);
-		res.setWidth(256);
+		res.setHeight(TILE_SIZE);
+		res.setWidth(TILE_SIZE);
 		res.setZoom(zoom);
 		res.setLatitude((int) Math.floor((1 - Math.log(Math.tan(location.getLatitude() * Math.PI / 180) + 
 				1 / Math.cos(location.getLatitude() * Math.PI / 180)) / Math.PI) / 2 * (1 << zoom)));
-		res.setLongitude((int) Math.floor((location.getLongitude() + 180) / 360 * (1 << zoom)));
+		res.setLongitude((int) Math.floor((location.getLongitude() + 180) / worldTilesCount(zoom)));
 		return res;
 	}
 

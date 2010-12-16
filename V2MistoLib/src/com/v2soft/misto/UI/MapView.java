@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.v2soft.misto.UI.adapter.MapnikAdapter;
+import com.v2soft.misto.math.Projection;
 
 import android.content.Context;
 import android.location.Location;
@@ -45,6 +46,7 @@ public class MapView extends FrameLayout implements OnZoomListener {
 	private MapnikAdapter mAdapter;
 	private int mZoom = 12;
     private int sx,sy;
+    private Projection mProjection;
 
 
 	public MapView(Context context, AttributeSet attrs, int defStyle) {
@@ -89,7 +91,6 @@ public class MapView extends FrameLayout implements OnZoomListener {
 
 	private void init() 
 	{
-//		this.setOnTouchListener(this);
 		
 		mTileMapView = new TileMapView(getContext());
 		mLayers.add(mTileMapView);
@@ -106,6 +107,8 @@ public class MapView extends FrameLayout implements OnZoomListener {
 		mZoomButtons.setOnZoomListener(this);
 //		ViewGroup.LayoutParams params = mZoomButtons.getContainer().getLayoutParams();
 		setBuiltInZoomControls(true);
+		
+		mProjection = new Projection(mAdapter.getProvider());
 	}
 
 	public void setBuiltInZoomControls(boolean value)
