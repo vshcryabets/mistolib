@@ -20,6 +20,7 @@
 // ***** END LICENSE BLOCK *****
 package com.v2soft.misto.UI;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.v2soft.misto.UI.adapter.MapnikAdapter;
@@ -29,6 +30,9 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ZoomButtonsController;
 import android.widget.ZoomButtonsController.OnZoomListener;
@@ -37,8 +41,11 @@ public class MapView extends FrameLayout implements OnZoomListener {
 	private FrameLayout mControlsLayer;
 	private ZoomButtonsController mZoomButtons;
 	private TileMapView mTileMapView;
+	private ArrayList<View> mLayers = new ArrayList<View>();
 	private MapnikAdapter mAdapter;
 	private int mZoom = 12;
+    private int sx,sy;
+
 
 	public MapView(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
@@ -82,7 +89,10 @@ public class MapView extends FrameLayout implements OnZoomListener {
 
 	private void init() 
 	{
+//		this.setOnTouchListener(this);
+		
 		mTileMapView = new TileMapView(getContext());
+		mLayers.add(mTileMapView);
 		mAdapter = new MapnikAdapter(getContext(), 
 				getCurrentLocation(getContext()), mZoom);
 		mTileMapView.setDataAdapter(mAdapter);
@@ -94,6 +104,7 @@ public class MapView extends FrameLayout implements OnZoomListener {
 		mZoomButtons = new ZoomButtonsController(mControlsLayer);
 		mZoomButtons.setAutoDismissed(true);
 		mZoomButtons.setOnZoomListener(this);
+//		ViewGroup.LayoutParams params = mZoomButtons.getContainer().getLayoutParams();
 		setBuiltInZoomControls(true);
 	}
 
@@ -110,9 +121,51 @@ public class MapView extends FrameLayout implements OnZoomListener {
 			
 	}
 	
+    @Override
+    public boolean onTouchEvent(MotionEvent event) 
+    {
+		try
+		{
+			if ( event.getAction() == MotionEvent.ACTION_DOWN )
+			{
+				sx = (int) event.getX();
+				sy = (int) event.getY();
+			}
+			if ( event.getAction() == MotionEvent.ACTION_UP )
+			{
+				int dx = (int) (event.getX()-sx);
+				int dy = (int) (event.getY()-sy);
+				scrollBy(-dx, -dy);
+			}
+			if ( event.getAction() == MotionEvent.ACTION_MOVE)
+			{
+				int dx = (int) (event.getX()-sx);				
+				int dy = (int) (event.getY()-sy);
+				if ( Math.abs(dx*dy) > 100 )
+				{
+					scrollBy(-dx, -dy);
+					sx = (int) event.getX();
+					sy = (int) event.getY();
+				}
+			}
+		}
+		catch (Exception e) 
+		{
+			Log.d("MapView::onTouchEvent", e.toString());
+		}
+    	return true;
+    }	
+    
 	public int getZoomLevel()
 	{
 		return 0;
+	}
+	
+	@Override
+	public void scrollBy(int x, int y) {
+		for (View view : mLayers) {
+			view.scrollBy(x, y);
+		}
 	}
 
 	@Override
