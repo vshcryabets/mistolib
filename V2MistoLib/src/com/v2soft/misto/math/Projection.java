@@ -29,7 +29,6 @@ public class Projection
 {
 	private int mZoom;
 	private long mBasePointX, mBasePointY;
-	private Location mBasePoint;
 	private BitmapProvider mProvider;
 	
 	public Projection(BitmapProvider provider)
@@ -45,19 +44,17 @@ public class Projection
 	public Location fromPixels(int x, int y, Location out)
 	{
 		if ( out == null )
-			out = new Location(mBasePoint);
+			out = new Location("com.v2soft.misto.math.Projection");
 		long scale = mProvider.worldWidthPx(mZoom);
-		double long_offset = (mBasePointX+x)/scale*360-180;
+		double long_offset = ((double)mBasePointX+x)*360/scale-180;
+		// This is the inverse of the Gudermannian function
+		// http://en.wikipedia.org/wiki/Gudermannian_function
+		double ny = (-scale/2+(mBasePointY+y))/(scale/(2*Math.PI));
 		double lat_offset = -Math.toDegrees(
-				Math.PI/2-(
 					2*Math.atan(
-						Math.exp(
-							-(mBasePointY+y)/
-							(scale/(2*Math.PI))
-						)
-					)
-				)
-			); 
+						Math.exp(ny)
+						)-Math.PI/2
+				);
 		out.setLatitude(lat_offset);
 		out.setLongitude(long_offset);
 		return out;
@@ -79,6 +76,7 @@ public class Projection
 	/**
 	 * Converts the given GeoPoint to onscreen pixel coordinates, 
 	 * relative to the top-left of the MapView that provided this Projection.
+	 * Mathematics details can be found at http://en.wikipedia.org/wiki/Mercator_projection
 	 * @param in The latitude/longitude pair to convert.
 	 * @param out A pre-existing object to use for the output; 
 	 * if null, a new Point will be allocated and returned.
@@ -89,10 +87,30 @@ public class Projection
 		if (  out == null )
 			out = new Point();
 		long scale = mProvider.worldWidthPx(mZoom);
-		long x = (long) ((in.getLongitude()+180)*scale/360);
-//		long y = 
-		// TODO: write math logic
+		double dx = ((in.getLongitude()+180)*scale/360);
+		long x = (long) Math.round(dx);
+		
+		double sin_lat = Math.sin(Math.toRadians(in.getLatitude()));
+		double y = 
+			Math.log(
+				(1+sin_lat)/
+				(1-sin_lat)
+				)*0.5;
+		y = y/(2*Math.PI);
+		y = (0.5 - y)*scale;
+		out.x = (int) x;
+		out.y = (int) y;
 		return out;
 	}
-     
+
+	public void setZoom(int zoom) 
+	{
+		mZoom = zoom;
+	}
+	
+	public void setBasePoint(Point point)
+	{
+		mBasePointX = point.x;
+		mBasePointY = point.y;
+	}
 }

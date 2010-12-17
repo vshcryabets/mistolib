@@ -27,14 +27,17 @@ import com.v2soft.misto.UI.adapter.MapnikAdapter;
 import com.v2soft.misto.math.Projection;
 
 import android.content.Context;
+import android.graphics.Point;
 import android.location.Location;
 import android.location.LocationManager;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.ZoomButtonsController;
 import android.widget.ZoomButtonsController.OnZoomListener;
 
@@ -47,6 +50,7 @@ public class MapView extends FrameLayout implements OnZoomListener {
 	private int mZoom = 12;
     private int sx,sy;
     private Projection mProjection;
+    private long mBaseX, mBaseY;
 
 
 	public MapView(Context context, AttributeSet attrs, int defStyle) {
@@ -105,10 +109,20 @@ public class MapView extends FrameLayout implements OnZoomListener {
 		mZoomButtons = new ZoomButtonsController(mControlsLayer);
 		mZoomButtons.setAutoDismissed(true);
 		mZoomButtons.setOnZoomListener(this);
-//		ViewGroup.LayoutParams params = mZoomButtons.getContainer().getLayoutParams();
+//		LinearLayout.LayoutParams params = 
+//			(android.widget.LinearLayout.LayoutParams) mZoomButtons.getContainer().getLayoutParams();
+//		params.gravity = Gravity.BOTTOM | Gravity.RIGHT;
+//		mZoomButtons.getContainer().setLayoutParams(params);
 		setBuiltInZoomControls(true);
 		
 		mProjection = new Projection(mAdapter.getProvider());
+		mProjection.setZoom(mZoom);
+		Location curent = getCurrentLocation(getContext());
+		Point p = mProjection.toPixels(curent, null);
+		mBaseX = p.x;
+		mBaseY = p.y;
+		mProjection.setBasePoint(p);
+		Location n = mProjection.fromPixels(0, 0, null);
 	}
 
 	public void setBuiltInZoomControls(boolean value)
@@ -161,7 +175,7 @@ public class MapView extends FrameLayout implements OnZoomListener {
     
 	public int getZoomLevel()
 	{
-		return 0;
+		return mZoom;
 	}
 	
 	@Override
