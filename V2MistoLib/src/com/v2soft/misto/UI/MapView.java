@@ -27,17 +27,14 @@ import com.v2soft.misto.UI.adapter.MapnikAdapter;
 import com.v2soft.misto.math.Projection;
 
 import android.content.Context;
-import android.graphics.Point;
 import android.location.Location;
 import android.location.LocationManager;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
-import android.widget.LinearLayout;
 import android.widget.ZoomButtonsController;
 import android.widget.ZoomButtonsController.OnZoomListener;
 
@@ -48,10 +45,8 @@ public class MapView extends FrameLayout implements OnZoomListener {
 	private ArrayList<View> mLayers = new ArrayList<View>();
 	private MapnikAdapter mAdapter;
 	private int mZoom = 12;
-    private int sx,sy;
-    private Projection mProjection;
-    private long mBaseX, mBaseY;
-
+        private int mTouchLastX, mTouchLastY;
+	private Projection mProjection;
 
 	public MapView(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
@@ -95,6 +90,7 @@ public class MapView extends FrameLayout implements OnZoomListener {
 
 	private void init() 
 	{
+//		this.setOnTouchListener(this);
 		
 		mTileMapView = new TileMapView(getContext());
 		mLayers.add(mTileMapView);
@@ -109,20 +105,10 @@ public class MapView extends FrameLayout implements OnZoomListener {
 		mZoomButtons = new ZoomButtonsController(mControlsLayer);
 		mZoomButtons.setAutoDismissed(true);
 		mZoomButtons.setOnZoomListener(this);
-//		LinearLayout.LayoutParams params = 
-//			(android.widget.LinearLayout.LayoutParams) mZoomButtons.getContainer().getLayoutParams();
-//		params.gravity = Gravity.BOTTOM | Gravity.RIGHT;
-//		mZoomButtons.getContainer().setLayoutParams(params);
+//		ViewGroup.LayoutParams params = mZoomButtons.getContainer().getLayoutParams();
 		setBuiltInZoomControls(true);
-		
+
 		mProjection = new Projection(mAdapter.getProvider());
-		mProjection.setZoom(mZoom);
-		Location curent = getCurrentLocation(getContext());
-		Point p = mProjection.toPixels(curent, null);
-		mBaseX = p.x;
-		mBaseY = p.y;
-		mProjection.setBasePoint(p);
-		Location n = mProjection.fromPixels(0, 0, null);
 	}
 
 	public void setBuiltInZoomControls(boolean value)
@@ -145,24 +131,24 @@ public class MapView extends FrameLayout implements OnZoomListener {
 		{
 			if ( event.getAction() == MotionEvent.ACTION_DOWN )
 			{
-				sx = (int) event.getX();
-				sy = (int) event.getY();
+				mTouchLastX = (int) event.getX();
+				mTouchLastY = (int) event.getY();
 			}
 			if ( event.getAction() == MotionEvent.ACTION_UP )
 			{
-				int dx = (int) (event.getX()-sx);
-				int dy = (int) (event.getY()-sy);
+				int dx = (int) (event.getX()-mTouchLastX);
+				int dy = (int) (event.getY()-mTouchLastY);
 				scrollBy(-dx, -dy);
 			}
 			if ( event.getAction() == MotionEvent.ACTION_MOVE)
 			{
-				int dx = (int) (event.getX()-sx);				
-				int dy = (int) (event.getY()-sy);
+				int dx = (int) (event.getX()-mTouchLastX);				
+				int dy = (int) (event.getY()-mTouchLastY);
 				if ( Math.abs(dx*dy) > 100 )
 				{
 					scrollBy(-dx, -dy);
-					sx = (int) event.getX();
-					sy = (int) event.getY();
+					mTouchLastX = (int) event.getX();
+					mTouchLastY = (int) event.getY();
 				}
 			}
 		}
@@ -175,7 +161,7 @@ public class MapView extends FrameLayout implements OnZoomListener {
     
 	public int getZoomLevel()
 	{
-		return mZoom;
+		return 0;
 	}
 	
 	@Override

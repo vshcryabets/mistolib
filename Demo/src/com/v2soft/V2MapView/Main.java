@@ -39,7 +39,7 @@ public class Main extends Activity implements OnClickListener
 		}
 		catch (Exception e) 
 		{
-			Log.d("MapView::onClick", e.toString());
+			Log.d("Main::onClick", e.toString());
 		}
 	}
 }
