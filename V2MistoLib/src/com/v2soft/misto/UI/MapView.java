@@ -31,9 +31,9 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ZoomButtonsController;
 import android.widget.ZoomButtonsController.OnZoomListener;
@@ -85,17 +85,23 @@ public class MapView extends FrameLayout implements OnZoomListener {
 		    }
 		}
 		return location;
-	}    
+	}
+	
+	@Override
+	protected void onLayout(boolean changed, int left, int top, int right,
+			int bottom) 
+	{
+		super.onLayout(changed, left, top, right, bottom);
+	}
 	
 
 	private void init() 
 	{
-//		this.setOnTouchListener(this);
-		
+		Location current_location = getCurrentLocation(getContext());
 		mTileMapView = new TileMapView(getContext());
 		mLayers.add(mTileMapView);
 		mAdapter = new MapnikAdapter(getContext(), 
-				getCurrentLocation(getContext()), mZoom);
+				current_location, mZoom);
 		mTileMapView.setDataAdapter(mAdapter);
 		this.addView(mTileMapView);
 		
@@ -105,17 +111,21 @@ public class MapView extends FrameLayout implements OnZoomListener {
 		mZoomButtons = new ZoomButtonsController(mControlsLayer);
 		mZoomButtons.setAutoDismissed(true);
 		mZoomButtons.setOnZoomListener(this);
-//		ViewGroup.LayoutParams params = mZoomButtons.getContainer().getLayoutParams();
 		setBuiltInZoomControls(true);
 
 		mProjection = new Projection(mAdapter.getProvider());
+//		Point p = mProjection.toWorldPixels(current_location, null);
+//		mProjection.setBasePoint(p);
 	}
 
 	public void setBuiltInZoomControls(boolean value)
 	{
 		if ( value )
 		{
-			mControlsLayer.addView(mZoomButtons.getContainer());			
+			FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
+					LayoutParams.WRAP_CONTENT);
+			params.gravity = Gravity.BOTTOM | Gravity.RIGHT;
+			mControlsLayer.addView(mZoomButtons.getContainer(),params);			
 		}
 		else
 		{
