@@ -73,7 +73,8 @@ public class MapnikProvider extends BitmapProvider
 		res.setZoom(zoom);
 		res.setLatitude((int) Math.floor((1 - Math.log(Math.tan(location.getLatitude() * Math.PI / 180) + 
 				1 / Math.cos(location.getLatitude() * Math.PI / 180)) / Math.PI) / 2 * (1 << zoom)));
-		res.setLongitude((int) Math.floor((location.getLongitude() + 180) / worldTilesCount(zoom)));
+		double longitude = Math.floor((location.getLongitude() + 180) *worldTilesCount(zoom)/360);
+		res.setLongitude((int) longitude);
 		return res;
 	}
 

@@ -27,6 +27,7 @@ import com.v2soft.misto.UI.adapter.MapnikAdapter;
 import com.v2soft.misto.math.Projection;
 
 import android.content.Context;
+import android.graphics.Point;
 import android.location.Location;
 import android.location.LocationManager;
 import android.util.AttributeSet;
@@ -47,6 +48,7 @@ public class MapView extends FrameLayout implements OnZoomListener {
 	private int mZoom = 12;
         private int mTouchLastX, mTouchLastY;
 	private Projection mProjection;
+	private Location mCenterPoint = null; 
 
 	public MapView(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
@@ -91,17 +93,23 @@ public class MapView extends FrameLayout implements OnZoomListener {
 	protected void onLayout(boolean changed, int left, int top, int right,
 			int bottom) 
 	{
+		Point p = mProjection.toWorldPixels(mCenterPoint, null);
+		p.x = p.x - (right-left)/2;
+		p.y = p.y - (bottom-top)/2;
+		mProjection.setBasePoint(p);
+		
+		Location q = mProjection.fromPixels(100, 100, null);
 		super.onLayout(changed, left, top, right, bottom);
 	}
 	
 
 	private void init() 
 	{
-		Location current_location = getCurrentLocation(getContext());
+		mCenterPoint = getCurrentLocation(getContext());
 		mTileMapView = new TileMapView(getContext());
 		mLayers.add(mTileMapView);
 		mAdapter = new MapnikAdapter(getContext(), 
-				current_location, mZoom);
+				mCenterPoint, mZoom);
 		mTileMapView.setDataAdapter(mAdapter);
 		this.addView(mTileMapView);
 		
@@ -112,10 +120,9 @@ public class MapView extends FrameLayout implements OnZoomListener {
 		mZoomButtons.setAutoDismissed(true);
 		mZoomButtons.setOnZoomListener(this);
 		setBuiltInZoomControls(true);
-
+		// create projection
 		mProjection = new Projection(mAdapter.getProvider());
-//		Point p = mProjection.toWorldPixels(current_location, null);
-//		mProjection.setBasePoint(p);
+		mProjection.setZoom(mZoom);
 	}
 
 	public void setBuiltInZoomControls(boolean value)
