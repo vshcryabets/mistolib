@@ -43,9 +43,9 @@ public class MapView extends FrameLayout implements OnZoomListener {
 	private FrameLayout mControlsLayer;
 	private ZoomButtonsController mZoomButtons;
 	private TileMapView mTileMapView;
-	private ArrayList<View> mLayers = new ArrayList<View>();
+	private ArrayList<MapViewOverlay> mLayers = new ArrayList<MapViewOverlay>();
 	private MapnikAdapter mAdapter;
-	private int mZoom = 12;
+	private int mZoom = 14;
         private int mTouchLastX, mTouchLastY;
 	private Projection mProjection;
 	private Location mCenterPoint = null; 
@@ -93,12 +93,26 @@ public class MapView extends FrameLayout implements OnZoomListener {
 	protected void onLayout(boolean changed, int left, int top, int right,
 			int bottom) 
 	{
+		mAdapter = new MapnikAdapter(getContext());
+		mTileMapView.setDataAdapter(mAdapter);
+		
+		// create projection
+		mProjection = new Projection(mAdapter.getProvider());
+		mProjection.setZoom(mZoom);
+
 		Point p = mProjection.toWorldPixels(mCenterPoint, null);
 		p.x = p.x - (right-left)/2;
 		p.y = p.y - (bottom-top)/2;
 		mProjection.setBasePoint(p);
 		
-		Location q = mProjection.fromPixels(100, 100, null);
+		Location baseLocation = mProjection.fromPixels(0, 0, null);
+		mAdapter.setBasePoint(baseLocation, mZoom);
+		
+		// count base offset
+		int offset_x = p.x % 256;
+		int offset_y = p.y % 256;
+		Log.d("Proposed offset",offset_x+"x"+offset_y);
+//		mTileMapView.changeOffset(-(256-offset_x), -offset_y);
 		super.onLayout(changed, left, top, right, bottom);
 	}
 	
@@ -107,11 +121,17 @@ public class MapView extends FrameLayout implements OnZoomListener {
 	{
 		mCenterPoint = getCurrentLocation(getContext());
 		mTileMapView = new TileMapView(getContext());
+		mTileMapView.setMapView(this);		
 		mLayers.add(mTileMapView);
-		mAdapter = new MapnikAdapter(getContext(), 
-				mCenterPoint, mZoom);
-		mTileMapView.setDataAdapter(mAdapter);
+		Location t = new Location("test");
+		t.setLongitude(35.120125);
+		t.setLatitude(47.853041);
+		mCenterPoint = t;
+		PointOverlay overlay = new PointOverlay(getContext(), t);
+		overlay.setMapView(this);
+		mLayers.add(overlay);
 		this.addView(mTileMapView);
+		this.addView(overlay);
 		
 		mControlsLayer = new FrameLayout(getContext());
 		this.addView(mControlsLayer);
@@ -120,9 +140,6 @@ public class MapView extends FrameLayout implements OnZoomListener {
 		mZoomButtons.setAutoDismissed(true);
 		mZoomButtons.setOnZoomListener(this);
 		setBuiltInZoomControls(true);
-		// create projection
-		mProjection = new Projection(mAdapter.getProvider());
-		mProjection.setZoom(mZoom);
 	}
 
 	public void setBuiltInZoomControls(boolean value)
@@ -183,7 +200,8 @@ public class MapView extends FrameLayout implements OnZoomListener {
 	
 	@Override
 	public void scrollBy(int x, int y) {
-		for (View view : mLayers) {
+		mProjection.scrollBy(x,y);
+		for (MapViewOverlay view : mLayers) {
 			view.scrollBy(x, y);
 		}
 	}
@@ -207,5 +225,7 @@ public class MapView extends FrameLayout implements OnZoomListener {
 			mTileMapView.addZoom((float)-0.1);
 		}
 	}
+	
+	public Projection getProjection() {return mProjection;}
 
 }

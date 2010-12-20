@@ -123,7 +123,7 @@ public class Projection
 	{
 		Point res = toWorldPixels(in, out);
 		res.x = (int) (res.x - mBasePointX);
-		res.y = (int) (res.y - mBasePointX);
+		res.y = (int) (res.y - mBasePointY);
 		return res;
 	}
 
@@ -136,5 +136,11 @@ public class Projection
 	{
 		mBasePointX = point.x;
 		mBasePointY = point.y;
+	}
+
+	public void scrollBy(int x, int y) 
+	{
+		mBasePointX += x;
+		mBasePointY += y;
 	}
 }

@@ -29,9 +29,9 @@ import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.util.AttributeSet;
-import android.view.View;
+import android.util.Log;
 
-public class TileMapView extends View
+public class TileMapView extends MapViewOverlay
 {
 	private static final int CONST_TILECHANGEBOUND = 32;
 	private TileMapAdapter mAdapter;
@@ -68,13 +68,13 @@ public class TileMapView extends View
 
 	public TileMapView(Context context, AttributeSet attrs) 
 	{
-		super(context, attrs);
+		super(context);
 		init();
 	}
 	
 	public TileMapView(Context context, AttributeSet attrs, int defStyle) 
 	{
-		super(context, attrs, defStyle);
+		super(context);
 		init();
 	}
 	
@@ -93,11 +93,16 @@ public class TileMapView extends View
 		super.onScrollChanged(0, 0, 0, 0);
 	}
 	
-	@Override
-	public void scrollBy(int dx, int dy) 
+	public void changeOffset(int dx, int dy)
 	{
 		mTopOffset -= dy;
 		mLeftOffset -= dx;
+	}
+	
+	@Override
+	public void scrollBy(int dx, int dy) 
+	{
+		changeOffset(dx, dy);
 		boolean changed = false;
 		if ( mLeftOffset > -mTileChangeBound )
 		{
@@ -201,6 +206,7 @@ public class TileMapView extends View
 	@Override
 	protected void onDraw(Canvas canvas) 
 	{
+//		Log.d("Offsets", mLeftOffset+"x"+mTopOffset);
 		for ( int y = 0; y < mTileVertCount; y++ )
 		{
 			for ( int x = 0; x < mTileHorizCount; x++)
@@ -234,10 +240,10 @@ public class TileMapView extends View
 		if ( this.getWidth() == 0 ) return;
 		mTileHeight = mAdapter.getTileHeight();
 		mTileWidth = mAdapter.getTileWidth();
-		mTopOffset = -mAdapter.getTileHeight();
+		mTopOffset -= mAdapter.getTileHeight();
 		mTileDrawWidth = (int) (mTileWidth*mZoomLevel);
 		mTileDrawHeight = (int)(mTileHeight*mZoomLevel);
-		mLeftOffset = -mAdapter.getTileWidth();
+		mLeftOffset -= mAdapter.getTileWidth();
 		mTileHorizCount = this.getWidth() / mTileWidth + 2;
 		mTileVertCount = this.getHeight() / mTileHeight + 2;		
 		mDataArray = new TileInfo[mTileVertCount][mTileHorizCount];

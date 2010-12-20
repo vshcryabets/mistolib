@@ -33,11 +33,16 @@ public class MapnikAdapter extends TileMapAdapter implements BitmapProviderListe
 	TileInfo mBaseTile;
 	MapnikProvider mProvider;
 
-	public MapnikAdapter(Context context, Location location, int zoom) 
+	public MapnikAdapter(Context context) 
 	{
 		mProvider = new MapnikProvider(context);
 		mProvider.addListener(this);
+	}
+	
+	public void setBasePoint(Location location, int zoom)
+	{
 		mBaseTile = mProvider.getTileInfoByLocation(location, zoom);
+		notifyDataSetChanged();
 	}
 	
 	@Override
