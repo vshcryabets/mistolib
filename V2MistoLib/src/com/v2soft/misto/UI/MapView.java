@@ -45,7 +45,7 @@ public class MapView extends FrameLayout implements OnZoomListener {
 	private TileMapView mTileMapView;
 	private ArrayList<MapViewOverlay> mLayers = new ArrayList<MapViewOverlay>();
 	private MapnikAdapter mAdapter;
-	private int mZoom = 14;
+	private int mZoom = 17;
         private int mTouchLastX, mTouchLastY;
 	private Projection mProjection;
 	private Location mCenterPoint = null; 

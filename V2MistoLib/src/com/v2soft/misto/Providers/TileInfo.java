@@ -93,4 +93,9 @@ public class TileInfo
 		return mExternalId;
 	}
 
+	@Override
+	public String toString() 
+	{
+		return "T:"+longitude+":"+latitude+"x"+zoom;
+	}
 }
