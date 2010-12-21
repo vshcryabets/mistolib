@@ -1,6 +1,10 @@
 package com.v2soft.V2MapView;
 
+import com.v2soft.misto.UI.MapView;
+import com.v2soft.misto.UI.PointOverlay;
+
 import android.app.Activity;
+import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -19,6 +23,14 @@ public class Main extends Activity implements OnClickListener
     @Override
     protected void onResume() 
     {
+		Location t = new Location("test");
+		t.setLongitude(35.120125);
+		t.setLatitude(47.853041);
+		
+		PointOverlay overlay = new PointOverlay(this, t);
+		MapView map = (MapView)findViewById(R.id.tileMapUI);
+		map.addOverlay(overlay);
+
     	super.onResume();
     }
 

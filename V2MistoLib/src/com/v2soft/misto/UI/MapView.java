@@ -34,7 +34,6 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
-import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ZoomButtonsController;
 import android.widget.ZoomButtonsController.OnZoomListener;
@@ -121,17 +120,13 @@ public class MapView extends FrameLayout implements OnZoomListener {
 	{
 		mCenterPoint = getCurrentLocation(getContext());
 		mTileMapView = new TileMapView(getContext());
-		mTileMapView.setMapView(this);		
-		mLayers.add(mTileMapView);
-		Location t = new Location("test");
-		t.setLongitude(35.120125);
-		t.setLatitude(47.853041);
-		mCenterPoint = t;
-		PointOverlay overlay = new PointOverlay(getContext(), t);
-		overlay.setMapView(this);
-		mLayers.add(overlay);
-		this.addView(mTileMapView);
-		this.addView(overlay);
+		addOverlay(mTileMapView);
+
+//		Location t = new Location("test");
+//		t.setLongitude(35.120125);
+//		t.setLatitude(47.853041);
+//		mCenterPoint = t;
+		
 		
 		mControlsLayer = new FrameLayout(getContext());
 		this.addView(mControlsLayer);
@@ -228,4 +223,20 @@ public class MapView extends FrameLayout implements OnZoomListener {
 	
 	public Projection getProjection() {return mProjection;}
 
+	//-------------------------------------------------------------------------------------------
+	// Overlays functions
+	//-------------------------------------------------------------------------------------------
+	public void addOverlay(MapViewOverlay overlay)
+	{
+		mLayers.add(overlay);
+		this.addView(overlay);
+		overlay.setMapView(this);
+	}
+
+	public void removeOverlay(MapViewOverlay overlay)
+	{
+		mLayers.remove(overlay);
+		this.removeView(overlay);
+		overlay.setMapView(null);
+	}
 }
