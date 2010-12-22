@@ -22,7 +22,6 @@ package com.v2soft.misto.Providers;
 
 import java.io.InputStream;
 import java.io.RandomAccessFile;
-import java.util.ArrayList;
 import java.util.Calendar;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -33,8 +32,10 @@ import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 
 import com.v2soft.FileCacheStorage.FileCache;
+import com.v2soft.misto.Debug.BitmapManager;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.util.Log;
@@ -50,14 +51,12 @@ public class MapnikProvider extends BitmapProvider
     // Vars
     //-----------------------------------------------------------------------------------------------
 	private FileCache mLocalCache;
-	private ArrayList<TileInfo> mWaitTilesList;
-	private Thread mUploadThread;
 	//-----------------------------------------------------------------------------------------------
     // Constructors
     //-----------------------------------------------------------------------------------------------	
 	public MapnikProvider(Context context)
 	{
-		mWaitTilesList = new ArrayList<TileInfo>();
+		super(context);
 		mLocalCache = new FileCache(context, "/sdcard/V2MapView/cache/mapnik");
 	}
 	//-----------------------------------------------------------------------------------------------
@@ -123,7 +122,9 @@ public class MapnikProvider extends BitmapProvider
 				}
 			}
 			InputStream in = mLocalCache.getFileInputStream(local_name);
-			info.setBitmap(BitmapFactory.decodeStream(in));
+			final Bitmap bitmap = BitmapFactory.decodeStream(in);
+			BitmapManager.registerBitmap(bitmap, info.toString());
+			info.setBitmap(bitmap);
 			in.close();
 			return true;
 		}
@@ -134,20 +135,6 @@ public class MapnikProvider extends BitmapProvider
 		return false;
 	}
 
-	@Override
-	public void prepareTileImageAsync(final TileInfo info) 
-	{
-		synchronized (mWaitTilesList) 
-		{
-			mWaitTilesList.add(info);
-		}
-		// chech does thread is started
-		if (( mUploadThread == null ) || (!mUploadThread.isAlive()))
-		{
-			mUploadThread = new Thread(mUploader, "Upload therad");
-			mUploadThread.start();
-		}
-	}
 
 	@Override
 	public TileInfo getTileByOffset(TileInfo mBaseTile, int x, int y) 
@@ -159,29 +146,6 @@ public class MapnikProvider extends BitmapProvider
 		return res;
 	}
 	
-	Runnable mUploader = new Runnable() 
-	{
-		@Override
-		public void run() 
-		{
-			while (mWaitTilesList.size()>0)
-			{
-				TileInfo tile = mWaitTilesList.get(0);
-				if ( prepareTileImage(tile) )
-				{
-					// notify listeners
-					for (BitmapProviderListener listener : listeners) 
-					{
-						listener.onTileReady(tile);
-					}
-				}
-				// remove tail from wait list
-				synchronized (mWaitTilesList) 
-				{
-					mWaitTilesList.remove(0);
-				}
-			}
-		}
-	};
+
 
 }

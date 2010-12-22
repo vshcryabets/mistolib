@@ -20,6 +20,8 @@
 // ***** END LICENSE BLOCK *****
 package com.v2soft.misto.Providers;
 
+import com.v2soft.misto.Debug.BitmapManager;
+
 import android.graphics.Bitmap;
 
 public class TileInfo 
@@ -93,4 +95,20 @@ public class TileInfo
 		return mExternalId;
 	}
 
+	@Override
+	public String toString() 
+	{
+		return "T:"+longitude+":"+latitude+"x"+zoom;
+	}
+	
+	/**
+	 * Free up the memory associated with this tile's bitmap
+	 */
+	public void recycle() 
+	{
+		if ( mBitmap == null ) return;
+		if ( mBitmap.isRecycled() ) return;
+		BitmapManager.releaseBitmap(mBitmap);
+		mBitmap = null;
+	}
 }

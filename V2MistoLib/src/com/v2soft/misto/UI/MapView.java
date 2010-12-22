@@ -44,7 +44,7 @@ public class MapView extends FrameLayout implements OnZoomListener {
 	private TileMapView mTileMapView;
 	private ArrayList<MapViewOverlay> mLayers = new ArrayList<MapViewOverlay>();
 	private MapnikAdapter mAdapter;
-	private int mZoom = 14;
+	private int mZoom = 17;
         private int mTouchLastX, mTouchLastY;
 	private Projection mProjection;
 	private Location mCenterPoint = null; 
@@ -120,13 +120,8 @@ public class MapView extends FrameLayout implements OnZoomListener {
 	{
 		mCenterPoint = getCurrentLocation(getContext());
 		mTileMapView = new TileMapView(getContext());
+		mTileMapView.setRotateAngle(45);
 		addOverlay(mTileMapView);
-
-//		Location t = new Location("test");
-//		t.setLongitude(35.120125);
-//		t.setLatitude(47.853041);
-//		mCenterPoint = t;
-		
 		
 		mControlsLayer = new FrameLayout(getContext());
 		this.addView(mControlsLayer);
