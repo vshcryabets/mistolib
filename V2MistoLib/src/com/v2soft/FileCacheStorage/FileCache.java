@@ -86,8 +86,9 @@ public class FileCache
 	{
 		if ( !isFileInCache(filename))
 			throw new FileNotFoundException("There is no "+filename);
-		return new FileInputStream(mCasheDirectory+
-				File.separator+filename);		
+		final String filename_full = mCasheDirectory+
+			File.separator+filename;
+		return new FileInputStream(filename_full);		
 	}
 
 	/**

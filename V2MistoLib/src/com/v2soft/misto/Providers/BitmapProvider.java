@@ -21,6 +21,8 @@
 package com.v2soft.misto.Providers;
 
 import java.util.ArrayList;
+
+import android.content.Context;
 import android.location.Location;
 
 /**
@@ -31,12 +33,32 @@ import android.location.Location;
 public abstract class BitmapProvider 
 {
 	protected static final int TILE_SIZE = 256;
+	private ArrayList<TileInfo> mWaitTilesList;
+	private Thread mUploadThread;
 
 	public abstract boolean prepareTileImage(TileInfo info);	
-	public abstract void prepareTileImageAsync(TileInfo info);
 	public abstract TileInfo getTileInfoByLocation(Location location, int zoom);
 	public abstract TileInfo getTileByOffset(TileInfo mBaseTile, int x, int y);
 	
+	public BitmapProvider(Context context) {
+		mWaitTilesList = new ArrayList<TileInfo>();
+	}
+	
+	public void prepareTileImageAsync(final TileInfo info) 
+	{
+		synchronized (mWaitTilesList) 
+		{
+			mWaitTilesList.add(info);
+		}
+		// chech does thread is started
+		if (( mUploadThread == null ) || (!mUploadThread.isAlive()))
+		{
+			mUploadThread = new Thread(mUploader, "Upload therad");
+			mUploadThread.start();
+		}
+	}
+	
+
 	public TileInfo getSouthTile(TileInfo tile)
 	{
 		return getTileByOffset(tile, 0, 1);
@@ -80,4 +102,29 @@ public abstract class BitmapProvider
     {
             listeners.remove(listener);
     }
+    
+	Runnable mUploader = new Runnable() 
+	{
+		@Override
+		public void run() 
+		{
+			while (mWaitTilesList.size()>0)
+			{
+				TileInfo tile = mWaitTilesList.get(0);
+				if ( prepareTileImage(tile) )
+				{
+					// notify listeners
+					for (BitmapProviderListener listener : listeners) 
+					{
+						listener.onTileReady(tile);
+					}
+				}
+				// remove tail from wait list
+				synchronized (mWaitTilesList) 
+				{
+					mWaitTilesList.remove(0);
+				}
+			}
+		}
+	};    
 }

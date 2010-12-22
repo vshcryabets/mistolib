@@ -20,11 +20,14 @@
 // ***** END LICENSE BLOCK *****
 package com.v2soft.misto.UI;
 
+import com.v2soft.misto.Debug.BitmapManager;
 import com.v2soft.misto.Providers.TileInfo;
 import com.v2soft.misto.UI.adapter.TileMapAdapter;
 
 import android.content.Context;
 import android.database.DataSetObserver;
+import android.graphics.Bitmap;
+import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Paint;
@@ -38,14 +41,15 @@ public class TileMapView extends MapViewOverlay
 	private TileInfo [][] mDataArray;
 	private int mTileHorizCount, mTileVertCount;
 	private int mTileWidth, mTileHeight;
-	private int mTileDrawWidth, mTileDrawHeight;
 	private int mTopLeftX = 0, mTopLeftY = 0;
-	private Paint mPaint;
+	private Paint mPaint, mTextPaint;
 	private int mTopOffset, mLeftOffset;
 	private float mZoomLevel;
 	private Matrix mTileMatrix;
 	private int mTileChangeBound;
 	private TileMapViewObserver mObserver;
+	private Bitmap mBitmap;
+	private float mRotateAngle;
 
 	public TileMapView(Context context) 
 	{
@@ -55,10 +59,17 @@ public class TileMapView extends MapViewOverlay
 
 	private void init() 
 	{
+		setRotateAngle(0);
 		mTileChangeBound = CONST_TILECHANGEBOUND;
 		mPaint = new Paint();
 		mPaint.setFilterBitmap(true);
 		mPaint.setColor(0xFF909000);
+		mPaint.setTextSize(10);
+		
+		mTextPaint = new Paint();
+		mTextPaint.setColor(0xFF010100);
+		mTextPaint.setTextSize(10);
+
 		mTopOffset = 0;
 		mLeftOffset = 0;
 		mZoomLevel = 1;
@@ -206,23 +217,14 @@ public class TileMapView extends MapViewOverlay
 	@Override
 	protected void onDraw(Canvas canvas) 
 	{
-//		Log.d("Offsets", mLeftOffset+"x"+mTopOffset);
-		for ( int y = 0; y < mTileVertCount; y++ )
-		{
-			for ( int x = 0; x < mTileHorizCount; x++)
-			{
-				TileInfo tile = mDataArray[y][x];
-				int left = x*mTileWidth+mLeftOffset;
-				int top = y*mTileWidth+mTopOffset;
-				mTileMatrix.setTranslate(left, top);
-				mTileMatrix.postScale(mZoomLevel, mZoomLevel);
-				if ( tile.getBitmap() != null )
-					canvas.drawBitmap(tile.getBitmap(), mTileMatrix, mPaint);
-				else
-					canvas.drawRect(left, top, left+mTileDrawWidth-2, 
-							top+mTileDrawHeight-2, mPaint);
-			}
-		}
+		int left = mLeftOffset;
+		int top = mTopOffset;
+		mTileMatrix.setTranslate(left, top);
+//		mTileMatrix.setRotate(mRotateAngle);
+		mTileMatrix.postScale(mZoomLevel, mZoomLevel);
+//		mTileMatrix.postRotate(mRotateAngle);
+		canvas.drawBitmap(mBitmap, mTileMatrix, mPaint);
+		BitmapManager.showUsage();
 		super.onDraw(canvas);
 	}
 	
@@ -241,12 +243,16 @@ public class TileMapView extends MapViewOverlay
 		mTileHeight = mAdapter.getTileHeight();
 		mTileWidth = mAdapter.getTileWidth();
 		mTopOffset -= mAdapter.getTileHeight();
-		mTileDrawWidth = (int) (mTileWidth*mZoomLevel);
-		mTileDrawHeight = (int)(mTileHeight*mZoomLevel);
 		mLeftOffset -= mAdapter.getTileWidth();
 		mTileHorizCount = this.getWidth() / mTileWidth + 2;
 		mTileVertCount = this.getHeight() / mTileHeight + 2;		
 		mDataArray = new TileInfo[mTileVertCount][mTileHorizCount];
+		mBitmap = Bitmap.createBitmap(mTileHorizCount*mTileWidth, 
+				mTileVertCount*mTileHeight, 
+				Config.RGB_565);
+		BitmapManager.registerBitmap(mBitmap, "TileMap main");
+//		mBitmap.
+//		mBitmap.prepareToDraw();
 		fillDataArray();
 	}
 
@@ -257,20 +263,53 @@ public class TileMapView extends MapViewOverlay
 		{
 			for ( int x = 0; x < mTileHorizCount; x++)
 			{
-				if ( mDataArray[y][x] == null )
+				int id = y*10000+x+1; 
+				if ( mDataArray[y][x] != null )
+					mDataArray[y][x].recycle();
+				mDataArray[y][x] = mAdapter.getTileInfoAsync(mTopLeftX+x, mTopLeftY+y, mDataArray[y][x]);
+				mDataArray[y][x].setExternalId(id);
+			}
+		}
+		System.gc();
+		rebuildBitmap();
+	}
+
+	private Runnable mRebuilder = new Runnable() 
+	{
+		@Override
+		public void run() {
+			// TODO Auto-generated method stub
+			
+		}
+	};
+	private void rebuildBitmap() 
+	{
+		if ( mBitmap == null ) return;
+		final Canvas c = new Canvas(mBitmap);
+		for ( int y = 0; y < mTileVertCount; y++ )
+		{
+			for ( int x = 0; x < mTileHorizCount; x++)
+			{
+				if ( mDataArray[y][x].getExternalId() > 0 )
 				{
-					int id = y*10000+x; 
-					mDataArray[y][x] = mAdapter.getTileInfoAsync(mTopLeftX+x, mTopLeftY+y, mDataArray[y][x]);
-					mDataArray[y][x].setExternalId(id);
+					// draw tile to bitmap
+					final float left = x * mTileWidth;
+					final float top = y * mTileHeight;
+					if ( mDataArray[y][x].getBitmap() != null )
+					{
+						c.drawBitmap(mDataArray[y][x].getBitmap(), left, top, mPaint);
+						mDataArray[y][x].setExternalId(0);
+						mDataArray[y][x].recycle();
+//						Log.d("rebuildBitmp", "Updted "+mDataArray[y][x].toString());
+					}
+					else
+                        c.drawRect(left, top, left+mTileWidth-1, 
+                                        top+mTileHeight-1, mPaint);
+					c.drawText(mDataArray[y][x].toString(), left+5, top+5, mTextPaint);
 				}
 			}
 		}
-	}
-
-	public void updateTile(TileInfo tile) 
-	{
-//		int x = tile.getExternalId() & 0xFFFF;
-//		int y = tile.getExternalId() / 0x10000;
+//		Log.d("rebuildBitmp", "Finished");
 		this.postInvalidate();
 	}
 	
@@ -280,18 +319,28 @@ public class TileMapView extends MapViewOverlay
 		this.postInvalidate();
 	}
 	
+	public void setRotateAngle(float mRotateAngle) {
+		this.mRotateAngle = mRotateAngle;
+		this.postInvalidate();
+	}
+
+	public float getRotateAngle() {
+		return mRotateAngle;
+	}
+
 	private class TileMapViewObserver extends DataSetObserver
 	{
 		@Override
 		public void onChanged() 
 		{
-			TileMapView.this.postInvalidate();
+//			Log.d("Observer", "Chnged");
+			TileMapView.this.rebuildBitmap();
 		}
 		
 		@Override
 		public void onInvalidated() 
 		{
-			TileMapView.this.postInvalidate();		
+			TileMapView.this.rebuildBitmap();		
 		}
 	}
 }
