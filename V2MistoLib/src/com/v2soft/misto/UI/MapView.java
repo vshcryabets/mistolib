@@ -39,6 +39,7 @@ import android.widget.ZoomButtonsController;
 import android.widget.ZoomButtonsController.OnZoomListener;
 
 public class MapView extends FrameLayout implements OnZoomListener {
+	private static final String LOG_TAG = MapView.class.getSimpleName();
 	private FrameLayout mControlsLayer;
 	private ZoomButtonsController mZoomButtons;
 	private TileMapView mTileMapView;
@@ -51,17 +52,32 @@ public class MapView extends FrameLayout implements OnZoomListener {
 
 	public MapView(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
-		init();
+		mCenterPoint = getCurrentLocation(context);
+		mTileMapView = new TileMapView(context);
+//		mTileMapView.setRotateAngle(45);
+		addOverlay(mTileMapView);
+		mAdapter = new MapnikAdapter(context);
+		try {
+			mTileMapView.setDataAdapter(mAdapter);
+		} catch (Exception e) {
+			Log.e(LOG_TAG, e.toString(), e);
+		}
+		
+		mControlsLayer = new FrameLayout(getContext());
+		this.addView(mControlsLayer);
+		
+		mZoomButtons = new ZoomButtonsController(mControlsLayer);
+		mZoomButtons.setAutoDismissed(true);
+		mZoomButtons.setOnZoomListener(this);
+		setBuiltInZoomControls(true);	
 	}
 
 	public MapView(Context context, AttributeSet attrs) {
-		super(context, attrs);
-		init();
+		this(context, attrs, 0);
 	}
 
 	public MapView(Context context) {
-		super(context);
-		init();
+		this(context, null);
 	}	
 	
 	/**
@@ -85,6 +101,12 @@ public class MapView extends FrameLayout implements OnZoomListener {
 		        if ( location != null) break;  
 		    }
 		}
+		if ( location == null ) {
+			location = new Location("MapView");
+			//http://maps.google.com/?ll=47.857388,35.107273&spn=0.003686,0.009645&t=h&z=17&vpsrc=6
+			location.setLatitude(47.857388);
+			location.setLongitude(35.107273);
+		}
 		return location;
 	}
 	
@@ -92,9 +114,6 @@ public class MapView extends FrameLayout implements OnZoomListener {
 	protected void onLayout(boolean changed, int left, int top, int right,
 			int bottom) 
 	{
-		mAdapter = new MapnikAdapter(getContext());
-		mTileMapView.setDataAdapter(mAdapter);
-		
 		// create projection
 		mProjection = new Projection(mAdapter.getProvider());
 		mProjection.setZoom(mZoom);
@@ -115,23 +134,6 @@ public class MapView extends FrameLayout implements OnZoomListener {
 		super.onLayout(changed, left, top, right, bottom);
 	}
 	
-
-	private void init() 
-	{
-		mCenterPoint = getCurrentLocation(getContext());
-		mTileMapView = new TileMapView(getContext());
-		mTileMapView.setRotateAngle(45);
-		addOverlay(mTileMapView);
-		
-		mControlsLayer = new FrameLayout(getContext());
-		this.addView(mControlsLayer);
-		
-		mZoomButtons = new ZoomButtonsController(mControlsLayer);
-		mZoomButtons.setAutoDismissed(true);
-		mZoomButtons.setOnZoomListener(this);
-		setBuiltInZoomControls(true);
-	}
-
 	public void setBuiltInZoomControls(boolean value)
 	{
 		if ( value )

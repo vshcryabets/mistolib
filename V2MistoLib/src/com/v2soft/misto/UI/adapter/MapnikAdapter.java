@@ -30,8 +30,8 @@ import com.v2soft.misto.Providers.TileInfo;
 
 public class MapnikAdapter extends TileMapAdapter implements BitmapProviderListener
 {
-	TileInfo mBaseTile;
-	MapnikProvider mProvider;
+	private TileInfo mBaseTile;
+	private MapnikProvider mProvider;
 
 	public MapnikAdapter(Context context) 
 	{

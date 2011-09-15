@@ -20,6 +20,8 @@
 // ***** END LICENSE BLOCK *****
 package com.v2soft.misto.math;
 
+import java.security.InvalidParameterException;
+
 import com.v2soft.misto.Providers.BitmapProvider;
 
 import android.graphics.Point;
@@ -91,6 +93,8 @@ public class Projection
 	 */
 	public Point toWorldPixels(Location in, android.graphics.Point out)
 	{
+		if ( in == null )
+			throw new InvalidParameterException("Location shouldn't be null");
 		if (  out == null )
 			out = new Point();
 		long scale = mProvider.worldWidthPx(mZoom);
