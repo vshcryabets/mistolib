@@ -37,6 +37,7 @@ import android.util.Log;
 public class TileMapView extends MapViewOverlay
 {
 	private static final int CONST_TILECHANGEBOUND = 32;
+	public static final String LOG_TAG = TileMapView.class.getSimpleName();
 	private TileMapAdapter mAdapter;
 	private TileInfo [][] mDataArray;
 	private int mTileHorizCount, mTileVertCount;
@@ -49,17 +50,23 @@ public class TileMapView extends MapViewOverlay
 	private int mTileChangeBound;
 	private TileMapViewObserver mObserver;
 	private Bitmap mBitmap;
-	private float mRotateAngle;
+//	private float mRotateAngle;
 
-	public TileMapView(Context context) 
-	{
+	public TileMapView(Context context) {
+		this(context, null);
+	}
+
+	public TileMapView(Context context, AttributeSet attrs)	{
+		this(context,attrs,0);
+	}
+	
+	public TileMapView(Context context, AttributeSet attrs, int defStyle) {
 		super(context);
 		init();
 	}
 
-	private void init() 
-	{
-		setRotateAngle(0);
+	private void init() {
+//		setRotateAngle(0);
 		mTileChangeBound = CONST_TILECHANGEBOUND;
 		mPaint = new Paint();
 		mPaint.setFilterBitmap(true);
@@ -76,21 +83,8 @@ public class TileMapView extends MapViewOverlay
 		mTileMatrix = new Matrix();
 		mObserver = new TileMapViewObserver();
 	}
-
-	public TileMapView(Context context, AttributeSet attrs) 
-	{
-		super(context);
-		init();
-	}
 	
-	public TileMapView(Context context, AttributeSet attrs, int defStyle) 
-	{
-		super(context);
-		init();
-	}
-	
-	public void setDataAdapter(TileMapAdapter adapter)
-	{
+	public void setDataAdapter(TileMapAdapter adapter) throws Exception {
 		mAdapter = adapter;
 		mAdapter.registerDataSetObserver(mObserver);
 		buildDataArray();
@@ -115,28 +109,27 @@ public class TileMapView extends MapViewOverlay
 	{
 		changeOffset(dx, dy);
 		boolean changed = false;
-		if ( mLeftOffset > -mTileChangeBound )
-		{
+		if ( mLeftOffset > -mTileChangeBound ) {
 			moveTilesToRight();
 			changed = true;
-		}
-		if ( mLeftOffset < -mTileWidth-mTileChangeBound )
-		{
+		} else if ( mLeftOffset < -mTileWidth-mTileChangeBound ) {
 			moveTilesToLeft();
 			changed = true;
 		}
-		if ( mTopOffset > -32 )
-		{
+		if ( mTopOffset > -32 )	{
 			moveTilesToBottom();
 			changed = true;
-		}
-		if ( mTopOffset < -mTileHeight-mTileChangeBound )
-		{
+		} else if ( mTopOffset < -mTileHeight-mTileChangeBound ) {
 			moveTilesToTop();
 			changed = true;
 		}
-		if ( changed )
-			fillDataArray();
+		if ( changed ) {
+			try {
+				fillDataArray();
+			} catch (Exception e) {
+				Log.e(LOG_TAG, e.toString(), e);
+			}
+		}
 		this.invalidate();
 	}
 	
@@ -233,32 +226,33 @@ public class TileMapView extends MapViewOverlay
 			int bottom) 
 	{
 		super.onLayout(changed, left, top, right, bottom);
-		buildDataArray();
+		try {
+			buildDataArray();
+		} catch (Exception e) {
+			Log.e(LOG_TAG, e.toString(), e);
+		}
 	}
 
-	private void buildDataArray() 
-	{
+	private void buildDataArray() throws Exception {
 		if ( mAdapter == null ) return;
-		if ( this.getWidth() == 0 ) return;
+		if ( this.getWidth() == 0 ) return;		
 		mTileHeight = mAdapter.getTileHeight();
 		mTileWidth = mAdapter.getTileWidth();
 		mTopOffset -= mAdapter.getTileHeight();
 		mLeftOffset -= mAdapter.getTileWidth();
 		mTileHorizCount = this.getWidth() / mTileWidth + 2;
 		mTileVertCount = this.getHeight() / mTileHeight + 2;		
+		Log.d(LOG_TAG, "Init tiles array TP="+mTileWidth+"x"+mTileHeight+" Cnt="+mTileHorizCount+"x"+mTileVertCount);
 		mDataArray = new TileInfo[mTileVertCount][mTileHorizCount];
 		mBitmap = Bitmap.createBitmap(mTileHorizCount*mTileWidth, 
 				mTileVertCount*mTileHeight, 
 				Config.RGB_565);
 		BitmapManager.registerBitmap(mBitmap, "TileMap main");
-//		mBitmap.
-//		mBitmap.prepareToDraw();
 		fillDataArray();
 	}
 
-	private void fillDataArray() 
-	{
-		if ( mAdapter == null ) return;
+	private void fillDataArray() throws Exception {
+		if ( mAdapter == null ) throw new Exception("mDataadapter not initialized");
 		for ( int y = 0; y < mTileVertCount; y++ )
 		{
 			for ( int x = 0; x < mTileHorizCount; x++)
@@ -274,22 +268,22 @@ public class TileMapView extends MapViewOverlay
 		rebuildBitmap();
 	}
 
-	private Runnable mRebuilder = new Runnable() 
-	{
-		@Override
-		public void run() {
-			// TODO Auto-generated method stub
-			
-		}
-	};
+//	private Runnable mRebuilder = new Runnable() 
+//	{
+//		@Override
+//		public void run() {
+//			// TODO Auto-generated method stub
+//			
+//		}
+//	};
+	
 	private void rebuildBitmap() 
 	{
 		if ( mBitmap == null ) return;
 		final Canvas c = new Canvas(mBitmap);
-		for ( int y = 0; y < mTileVertCount; y++ )
-		{
-			for ( int x = 0; x < mTileHorizCount; x++)
-			{
+		for ( int y = 0; y < mTileVertCount; y++ ) {
+			for ( int x = 0; x < mTileHorizCount; x++) {
+				Log.d(LOG_TAG, "mDataArray["+y+"]["+x+"]="+mDataArray[y][x]);
 				if ( mDataArray[y][x].getExternalId() > 0 )
 				{
 					// draw tile to bitmap
@@ -319,27 +313,25 @@ public class TileMapView extends MapViewOverlay
 		this.postInvalidate();
 	}
 	
-	public void setRotateAngle(float mRotateAngle) {
-		this.mRotateAngle = mRotateAngle;
-		this.postInvalidate();
-	}
+//	public void setRotateAngle(float mRotateAngle) {
+//		this.mRotateAngle = mRotateAngle;
+//		this.postInvalidate();
+//	}
+//
+//	public float getRotateAngle() {
+//		return mRotateAngle;
+//	}
 
-	public float getRotateAngle() {
-		return mRotateAngle;
-	}
-
-	private class TileMapViewObserver extends DataSetObserver
-	{
+	private class TileMapViewObserver extends DataSetObserver {
 		@Override
-		public void onChanged() 
-		{
-//			Log.d("Observer", "Chnged");
+		public void onChanged() {
+			Log.d(LOG_TAG, "TileMapViewObserver::onChanged");
 			TileMapView.this.rebuildBitmap();
 		}
 		
 		@Override
-		public void onInvalidated() 
-		{
+		public void onInvalidated() {
+			Log.d(LOG_TAG, "TileMapViewObserver::onInvalidated");
 			TileMapView.this.rebuildBitmap();		
 		}
 	}

@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.util.Log;
 
 public class BitmapManager {
+	private static final String LOG_TAG = BitmapManager.class.getSimpleName();
 	private static ArrayList<Bitmap> mBitmaps = new ArrayList<Bitmap>();
 	private static ArrayList<String> mDescription = new ArrayList<String>();
 	
@@ -33,8 +34,8 @@ public class BitmapManager {
 			int bpp = bitmap.getRowBytes()/bitmap.getWidth();
 			int s = bitmap.getWidth()*bitmap.getHeight();
 			size += s*bpp;
-			Log.d("BitmapManager", "Object "+desc+"  "+s*bpp);
+			Log.d(LOG_TAG, "Object "+desc+"  "+s*bpp);
 		}
-		Log.d("BitmapManager", "Current memory used for bitmaps = "+size);
+		Log.d(LOG_TAG, "Current memory used for bitmaps = "+size);
 	}
 }
