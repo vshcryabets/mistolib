@@ -1,0 +1,1 @@
+Android library for working with OpenStreetMaps
